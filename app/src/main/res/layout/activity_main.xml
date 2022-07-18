@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilMsgACifrar"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/tietMsgACifrar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Digite a mensagem a cifrar"
+            android:inputType="textMultiLine" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilChave"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:errorEnabled="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tilMsgACifrar">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/tietChave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Digite a chave secreta"
+            android:inputType="textMultiLine" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/tvTextoCifrado"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Texto cifrado:"
+        app:layout_constraintEnd_toEndOf="@+id/tilChave"
+        app:layout_constraintStart_toStartOf="@+id/tilMsgACifrar"
+        app:layout_constraintTop_toBottomOf="@+id/tilChave" />
+
+    <TextView
+        android:id="@+id/tvMsgCifrada"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="M3ns4g3m C!fr@d@ . . ."
+        app:layout_constraintEnd_toEndOf="@+id/tvTextoCifrado"
+        app:layout_constraintStart_toStartOf="@+id/tvTextoCifrado"
+        app:layout_constraintTop_toBottomOf="@+id/tvTextoCifrado" />
+
+    <Button
+        android:id="@+id/btCifrar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="Cifrar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/tilMsgACifrar"
+        app:layout_constraintStart_toStartOf="@+id/tilMsgACifrar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
