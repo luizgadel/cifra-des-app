@@ -27,11 +27,13 @@ class MainActivity : AppCompatActivity() {
             val keyHasErrors = validations.keyHasErrors(binding.tilChave)
 
             if (!messageHasErrors && !keyHasErrors) {
-                val cipheredMessage = cipher(messageToCipher, cipherKey, isPlainText)
+                val binaryCipheredMessage = cipher(messageToCipher, cipherKey, isPlainText)
+                val ptCipheredMessage = binaryCipheredMessage.binToPlaintext()
+                val hexCipheredMessage = binaryCipheredMessage.binToHex()
                 binding.tvTextoCifrado.text =
-                    getString(R.string.texto_cifrado_placeholder, cipheredMessage)
+                    getString(R.string.texto_cifrado_placeholder, ptCipheredMessage)
                 binding.tvTextoCifradoHexa.text =
-                    getString(R.string.texto_cifrado_em_hexadecimal_placeholder, cipheredMessage)
+                    getString(R.string.texto_cifrado_em_hexadecimal_placeholder, hexCipheredMessage)
             }
         }
 
@@ -41,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(activityTag, "Mensagem a cifrar: \"$messageToCipher\"")
 
         val blocks = if (isPlainText) messageToCipher.chunked(8) else messageToCipher.chunked(16)
-        var cipheredBlocks = ""
+        var binaryCipheredBlocks = ""
         for (b in blocks) {
             Log.d(activityTag, "Bloco a cifrar: \"$b\"")
 
@@ -63,29 +65,18 @@ class MainActivity : AppCompatActivity() {
 
             val postRounds = halfLeft + halfRight
 
-            val postFP = finalPermutation(postRounds)
-            val cipheredBlock = postFP.from64bitToString()
+            val binaryCipheredBlock = finalPermutation(postRounds)
 
-            cipheredBlocks += cipheredBlock
+            binaryCipheredBlocks += binaryCipheredBlock
         }
 
-        return cipheredBlocks
+        return binaryCipheredBlocks
     }
 
     private fun String.to64bit(isPlainText: Boolean = true): String {
-        var msgLen = this.length
+        val plainText = if (isPlainText) this else this.hexToPlainText()
 
-        /* Transforma a mensagem de hexadecimal para texto simples */
-        var plainText = ""
-        if (isPlainText) plainText = this
-        else {
-            for (i in 1..msgLen step 2) {
-                val charCode = this.substring(i - 1, i + 1).toInt(16)
-                plainText += charCode.toChar()
-            }
-        }
-
-        msgLen = plainText.length
+        val msgLen = plainText.length
         val lenRestante = 8 - msgLen
 
         /* Garante que o tamanho da string seja de no mínimo 64 bits */
@@ -104,6 +95,23 @@ class MainActivity : AppCompatActivity() {
 
         Log.d(activityTag, "Binário: $binaryMsg")
         return binaryMsg
+    }
+
+    /**
+     * Essa função transforma uma mensagem em hexadecimal e converte, caractere a caractere, para
+     * uma mensagem de texto simples
+     * */
+    private fun String.hexToPlainText(): String {
+        val nibblesPerByte = 2
+        val chars = this.chunked(nibblesPerByte)
+
+        var plainText = ""
+        chars.forEach {
+            val charCode = it.toInt(16)
+            Log.d(activityTag, "Char: $it - \"$charCode\"")
+            plainText += charCode.toChar()
+        }
+        return plainText
     }
 
     private fun inicialPermutation(blc: String): String {
@@ -316,16 +324,39 @@ class MainActivity : AppCompatActivity() {
         return posFP
     }
 
-    private fun String.from64bitToString(): String {
-        Log.d(activityTag, "Bits a converter: $this")
+    /**
+     * Essa função toma uma string que representa uma mensagem em binário, a divide em blocos de
+     * 8 chars (bits) - que representam 1 byte -, converte cada bloco em seu valor inteiro e então
+     * os converte no caractere ASCII correspondente.
+     */
+    private fun String.binToPlaintext(): String {
         val bitsPerByte = 8
         val chars = this.chunked(bitsPerByte)
+
         var convertedString = ""
         chars.forEach {
             val charCode = it.toInt(2)
-            Log.d(activityTag, "Char: $it - \"$charCode\"")
             convertedString += charCode.toChar()
         }
+
+        return convertedString
+    }
+
+    /**
+     * Essa função toma uma string que representa uma mensagem em binário, a divide em blocos de
+     * 4 chars (bits) - que representam 1 hexadecimal -, converte cada bloco em seu valor inteiro e
+     * então os converte no caractere ASCII correspondente.
+     */
+    private fun String.binToHex(): String {
+        val bitsPerNibble = 4
+        val chars = this.chunked(bitsPerNibble)
+
+        var convertedString = ""
+        chars.forEach {
+            val hexValue = it.toInt(2)
+            convertedString += hexValue.toString(16)
+        }
+
         return convertedString
     }
 
