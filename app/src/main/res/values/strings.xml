@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Cifra DES</string>
+    <string name="texto_cifrado_placeholder">Texto cifrado: %s</string>
+    <string name="texto_cifrado_em_hexadecimal_placeholder">Texto cifrado em hexadecimal: %s</string>
 </resources>

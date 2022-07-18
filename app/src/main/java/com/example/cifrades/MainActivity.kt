@@ -20,38 +20,41 @@ class MainActivity : AppCompatActivity() {
         binding.btCifrar.setOnClickListener {
             val messageToCipher = binding.tietMsgACifrar.text.toString()
             val cipherKey = binding.tietChave.text.toString()
+            val isPlainText = binding.radioButton.isChecked
 
             val validations = Validations()
-            val messageHasErrors = validations.messageHasErrors(binding.tilMsgACifrar)
+            val messageHasErrors = validations.messageHasErrors(binding.tilMsgACifrar, isPlainText)
             val keyHasErrors = validations.keyHasErrors(binding.tilChave)
 
             if (!messageHasErrors && !keyHasErrors) {
-                val cipheredMessage = cipher(messageToCipher, cipherKey)
-                binding.tvMsgCifrada.text = cipheredMessage
+                val cipheredMessage = cipher(messageToCipher, cipherKey, isPlainText)
+                binding.tvTextoCifrado.text =
+                    getString(R.string.texto_cifrado_placeholder, cipheredMessage)
+                binding.tvTextoCifradoHexa.text =
+                    getString(R.string.texto_cifrado_em_hexadecimal_placeholder, cipheredMessage)
             }
         }
 
     }
 
-    private fun cipher(messageToCipher: String, cipherKey: String): String {
+    private fun cipher(messageToCipher: String, cipherKey: String, isPlainText: Boolean): String {
         Log.d(activityTag, "Mensagem a cifrar: \"$messageToCipher\"")
 
-        val blocks = messageToCipher.chunked(8)
+        val blocks = if (isPlainText) messageToCipher.chunked(8) else messageToCipher.chunked(16)
         var cipheredBlocks = ""
         for (b in blocks) {
             Log.d(activityTag, "Bloco a cifrar: \"$b\"")
 
-            val sixtyFourBitBlock = b.to64bit()
+            val sixtyFourBitBlock = b.to64bit(isPlainText)
             val postIP = inicialPermutation(sixtyFourBitBlock)
 
-            var halfLeft = sixtyFourBitBlock.substring(0, 32)
-            var halfRight = sixtyFourBitBlock.substring(32)
+            var halfLeft = postIP.substring(0, 32)
+            var halfRight = postIP.substring(32)
 
             var subkey = cipherKey.to64bit()
             var oldHalfRight: String
             for (i in 0..15) {
                 subkey = getRoundSubkey(subkey, i)
-                Log.d(activityTag, "Subchave da rodada $i: $subkey")
 
                 oldHalfRight = halfRight
                 halfRight = roundOperations(halfRight, subkey, halfLeft)
@@ -59,7 +62,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             val postRounds = halfLeft + halfRight
-            Log.d(activityTag, "String pós rounds: $postRounds")
 
             val postFP = finalPermutation(postRounds)
             val cipheredBlock = postFP.from64bitToString()
@@ -70,15 +72,27 @@ class MainActivity : AppCompatActivity() {
         return cipheredBlocks
     }
 
-    private fun String.to64bit(): String {
-        val msgLen = this.length
+    private fun String.to64bit(isPlainText: Boolean = true): String {
+        var msgLen = this.length
+
+        /* Transforma a mensagem de hexadecimal para texto simples */
+        var plainText = ""
+        if (isPlainText) plainText = this
+        else {
+            for (i in 1..msgLen step 2) {
+                val charCode = this.substring(i - 1, i + 1).toInt(16)
+                plainText += charCode.toChar()
+            }
+        }
+
+        msgLen = plainText.length
         val lenRestante = 8 - msgLen
 
         /* Garante que o tamanho da string seja de no mínimo 64 bits */
-        var msgExtendida = this
+        var msgExtendida = plainText
         if (lenRestante > 0) {
             val spaceChar = ' '
-            msgExtendida = this.padEnd(msgLen + lenRestante, spaceChar)
+            msgExtendida = plainText.padEnd(msgLen + lenRestante, spaceChar)
             Log.d(activityTag, "String extendida: \"$msgExtendida\"")
         }
 
@@ -131,7 +145,6 @@ class MainActivity : AppCompatActivity() {
         val baseSubkey = lastSubkey.removeParityBits()
         val halfLen = baseSubkey.length / 2
         val halfLenPower = 2.0.pow(halfLen).toInt()
-        Log.d(activityTag, "Tamanho da subchave aqui: ${halfLen * 2}")
 
         var subkeyVal = baseSubkey.toLong(2)
 
@@ -174,10 +187,8 @@ class MainActivity : AppCompatActivity() {
 
         val firstXor = block48bit.toLong(2) xor subkey48Bit.toLong(2)
         val firstXorStr = firstXor.toString(2).padStart(48, '0')
-        Log.d(activityTag, "Post XOR: ${firstXorStr.length}")
 
         val postSBoxes = substitution(firstXorStr)
-        Log.d(activityTag, "Post SBoxes: ${postSBoxes.length}")
 
         //permutation
         val permutedBlock = permutation(postSBoxes)
@@ -254,7 +265,7 @@ class MainActivity : AppCompatActivity() {
             val b = block.substring(startIndex, startIndex + 6)
             val r = b.first().toString() + b.last()
             val c = b.substring(1, 5)
-            newBlock += sBoxes[startIndex/6][r.toInt(2)][c.toInt(2)].toString(2).padStart(4, '0')
+            newBlock += sBoxes[startIndex / 6][r.toInt(2)][c.toInt(2)].toString(2).padStart(4, '0')
         }
 
         return newBlock
