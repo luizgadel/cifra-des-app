@@ -17,17 +17,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        binding.cipherModeChipGroup.setOnCheckedStateChangeListener { group, _ ->
+            binding.btCifrar.text = if (group.checkedChipId == R.id.decipherChip)
+                getString(R.string.decifrar)
+            else getString(R.string.cifrar)
+        }
+
         binding.btCifrar.setOnClickListener {
             val messageToCipher = binding.tietMsgACifrar.text.toString()
             val cipherKey = binding.tietChave.text.toString()
-            val isPlainText = binding.radioButton.isChecked
+            val isPlainText = binding.plaintextChip.isChecked
+            val decipheringMode = binding.decipherChip.isChecked
 
             val validations = Validations()
             val messageHasErrors = validations.messageHasErrors(binding.tilMsgACifrar, isPlainText)
             val keyHasErrors = validations.keyHasErrors(binding.tilChave)
 
             if (!messageHasErrors && !keyHasErrors) {
-                val binaryCipheredMessage = cipher(messageToCipher, cipherKey, isPlainText)
+                val binaryCipheredMessage =
+                    cipher(messageToCipher, cipherKey, isPlainText, decipheringMode)
                 val ptCipheredMessage = binaryCipheredMessage.binToPlaintext()
                 val hexCipheredMessage = binaryCipheredMessage.binToHex()
                 binding.tvTextoCifrado.text =
@@ -39,8 +47,20 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun cipher(messageToCipher: String, cipherKey: String, isPlainText: Boolean): String {
+    private fun cipher(
+        messageToCipher: String,
+        cipherKey: String,
+        isPlainText: Boolean,
+        decipheringMode: Boolean
+    ): String {
         Log.d(activityTag, "Mensagem a cifrar: \"$messageToCipher\"")
+
+        var binaryCipherKey = cipherKey.to64bit()
+        if (decipheringMode) {
+            Log.d(activityTag, "DECIFRAGEM")
+            binaryCipherKey = binaryCipherKey.reversed()
+        } else Log.d(activityTag, "CIFRAGEM")
+        Log.d(activityTag, "Key: $binaryCipherKey")
 
         val blocks = if (isPlainText) messageToCipher.chunked(8) else messageToCipher.chunked(16)
         var binaryCipheredBlocks = ""
@@ -53,7 +73,7 @@ class MainActivity : AppCompatActivity() {
             var halfLeft = postIP.substring(0, 32)
             var halfRight = postIP.substring(32)
 
-            var subkey = cipherKey.to64bit()
+            var subkey = binaryCipherKey
             var oldHalfRight: String
             for (i in 0..15) {
                 subkey = getRoundSubkey(subkey, i)
@@ -84,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         if (lenRestante > 0) {
             val spaceChar = ' '
             msgExtendida = plainText.padEnd(msgLen + lenRestante, spaceChar)
-            Log.d(activityTag, "String extendida: \"$msgExtendida\"")
+            Log.d(activityTag, "Ext: \"$msgExtendida\"")
         }
 
         /* Converte a string para binário */
@@ -93,7 +113,7 @@ class MainActivity : AppCompatActivity() {
             binaryMsg += String.format("%08d", c.code.toString(2).toInt())
         }
 
-        Log.d(activityTag, "Binário: $binaryMsg")
+        Log.d(activityTag, "Bin: $binaryMsg")
         return binaryMsg
     }
 
@@ -108,7 +128,7 @@ class MainActivity : AppCompatActivity() {
         var plainText = ""
         chars.forEach {
             val charCode = it.toInt(16)
-            Log.d(activityTag, "Char: $it - \"$charCode\"")
+            Log.d(activityTag, "Chr: $it - \"$charCode\"")
             plainText += charCode.toChar()
         }
         return plainText
@@ -127,7 +147,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         val posIP = blc.permuteByTable(tableIP)
-        Log.d(activityTag, "Pós IP: $posIP")
+        Log.d(activityTag, "IP: $posIP")
         return posIP
     }
 
@@ -184,7 +204,7 @@ class MainActivity : AppCompatActivity() {
             var strWithNoParityBits = ""
             for (i in 0..56 step 8)
                 strWithNoParityBits += this.substring(i + 1, i + 8)
-            Log.d(activityTag, "string sem dígitos de paridade: $strWithNoParityBits")
+            Log.d(activityTag, "rpb: $strWithNoParityBits")
             strWithNoParityBits
         } else this
     }
@@ -320,7 +340,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         val posFP = blc.permuteByTable(tableFP)
-        Log.d(activityTag, "Pós FP: $posFP")
+        Log.d(activityTag, "FP: $posFP")
         return posFP
     }
 

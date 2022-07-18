@@ -2,4 +2,14 @@
     <string name="app_name">Cifra DES</string>
     <string name="texto_cifrado_placeholder">Texto cifrado: %s</string>
     <string name="texto_cifrado_em_hexadecimal_placeholder">Texto cifrado em hexadecimal: %s</string>
+    <string name="texto_simples">Texto simples</string>
+    <string name="hexadecimal">Hexadecimal</string>
+    <string name="cifragem">Cifragem</string>
+    <string name="decifragem">Decifragem</string>
+    <string name="escolha_o_formato_da_mensagem">Escolha o formato da mensagem</string>
+    <string name="digite_a_mensagem_a_cifrar">Digite a mensagem a cifrar</string>
+    <string name="digite_a_chave_secreta">Digite a chave secreta</string>
+    <string name="cifrar">Cifrar</string>
+    <string name="escolha_o_modo_de_cifragem">Escolha o modo de cifragem</string>
+    <string name="decifrar">Decifrar</string>
 </resources>

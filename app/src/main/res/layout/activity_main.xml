@@ -23,7 +23,7 @@
             android:id="@+id/tietMsgACifrar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Digite a mensagem a cifrar"
+            android:hint="@string/digite_a_mensagem_a_cifrar"
             android:inputType="textMultiLine" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -32,30 +32,68 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Escolha o formato da mensagem"
+        android:text="@string/escolha_o_formato_da_mensagem"
         app:layout_constraintStart_toStartOf="@+id/tilMsgACifrar"
         app:layout_constraintTop_toBottomOf="@+id/tilMsgACifrar" />
 
-    <RadioGroup
-        android:id="@+id/radioGroup"
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/msgFormatChipGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:checkedChip="@id/plaintextChip"
         app:layout_constraintStart_toStartOf="@+id/textView"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:selectionRequired="true"
+        app:singleSelection="true">
 
-        <RadioButton
-            android:id="@+id/radioButton"
+        <com.google.android.material.chip.Chip
+            android:id="@+id/plaintextChip"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Texto simples" />
+            android:text="@string/texto_simples" />
 
-        <RadioButton
-            android:id="@+id/radioButton2"
-            android:layout_width="match_parent"
+        <com.google.android.material.chip.Chip
+            android:id="@+id/hexChip"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hexadecimal" />
-    </RadioGroup>
+            android:text="@string/hexadecimal" />
+    </com.google.android.material.chip.ChipGroup>
+
+    <TextView
+        android:id="@+id/tvCipherMode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/escolha_o_modo_de_cifragem"
+        app:layout_constraintStart_toStartOf="@+id/msgFormatChipGroup"
+        app:layout_constraintTop_toBottomOf="@+id/msgFormatChipGroup" />
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/cipherModeChipGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:checkedChip="@id/cipherChip"
+        app:layout_constraintStart_toStartOf="@+id/tvCipherMode"
+        app:layout_constraintTop_toBottomOf="@+id/tvCipherMode"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/cipherChip"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cifragem" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/decipherChip"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/decifragem" />
+    </com.google.android.material.chip.ChipGroup>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilChave"
@@ -63,17 +101,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
         app:errorEnabled="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/radioGroup"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup">
+        app:layout_constraintEnd_toEndOf="@+id/tilMsgACifrar"
+        app:layout_constraintStart_toStartOf="@+id/tilMsgACifrar"
+        app:layout_constraintTop_toBottomOf="@+id/cipherModeChipGroup">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/tietChave"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Digite a chave secreta"
+            android:hint="@string/digite_a_chave_secreta"
             android:inputType="textMultiLine" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -103,7 +140,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:text="Cifrar"
+        android:text="@string/cifrar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/tilMsgACifrar"
         app:layout_constraintStart_toStartOf="@+id/tilMsgACifrar" />
