@@ -97,25 +97,47 @@ class MainActivity : AppCompatActivity() {
     private fun String.to64bit(isPlainText: Boolean = true): String {
         val plainText = if (isPlainText) this else this.hexToPlainText()
 
-        val msgLen = plainText.length
-        val lenRestante = 8 - msgLen
+        val msgExtendida = plainText.extendTo64Bit()
 
-        /* Garante que o tamanho da string seja de no mínimo 64 bits */
-        var msgExtendida = plainText
-        if (lenRestante > 0) {
-            val spaceChar = ' '
-            msgExtendida = plainText.padEnd(msgLen + lenRestante, spaceChar)
-            Log.d(activityTag, "Ext: \"$msgExtendida\"")
-        }
-
-        /* Converte a string para binário */
-        var binaryMsg = ""
-        for (c in msgExtendida.toCharArray()) {
-            binaryMsg += String.format("%08d", c.code.toString(2).toInt())
-        }
+        val binaryMsg = msgExtendida.plaintextToBin()
 
         Log.d(activityTag, "Bin: $binaryMsg")
         return binaryMsg
+    }
+
+    /**
+     * Garante que o tamanho da string seja de no mínimo 64 bits
+     */
+    private fun String.extendTo64Bit(): String {
+        val spaceChar = ' '
+        val msgLen = this.length
+        val lenRestante = 8 - msgLen
+
+        return if (lenRestante > 0) {
+            Log.d(activityTag, "Extensão.")
+            this.padEnd(msgLen + lenRestante, spaceChar)
+        } else this
+    }
+
+    /**
+     * Converte a string para binário
+     */
+    private fun String.plaintextToBin(): String {
+
+        var binaryMsg = ""
+        this.forEach {
+            val charCode = it.code.binaryStr()
+            binaryMsg += charCode
+        }
+        return binaryMsg
+    }
+
+    private fun Int.binaryStr(nbits: Int = 8): String = this.toLong().binaryStr(nbits)
+
+    private fun Long.binaryStr(nbits: Int = 8): String {
+        val charZero = '0'
+        val radix = 2
+        return this.toString(radix).padStart(nbits, charZero)
     }
 
     /**
@@ -135,6 +157,17 @@ class MainActivity : AppCompatActivity() {
         return plainText
     }
 
+    /**
+     * Essa função permuta uma string a partir de uma tabela cujo indice i guarda o índice do novo
+     * valor que ocupará a posição i. A string retornada tem o tamanho da tabela.
+     * */
+    private fun String.permuteByTable(table: List<Int>): String {
+        var newBlock = ""
+        table.forEach { newBlock += this[it - 1] }
+
+        return newBlock
+    }
+
     private fun inicialPermutation(blc: String): String {
         val tableIP = listOf(
             58, 50, 42, 34, 26, 18, 10, 2,
@@ -150,17 +183,6 @@ class MainActivity : AppCompatActivity() {
         val posIP = blc.permuteByTable(tableIP)
         Log.d(activityTag, "IP: $posIP")
         return posIP
-    }
-
-    /**
-     * Essa função permuta uma string a partir de uma tabela cujo indice i guarda o índice do novo
-     * valor que ocupará a posição i. A string retornada tem o tamanho da tabela.
-     * */
-    private fun String.permuteByTable(table: List<Int>): String {
-        var newBlock = ""
-        table.forEach { newBlock += this[it - 1] }
-
-        return newBlock
     }
 
     private fun getRoundSubkey(lastSubkey: String, roundNumber: Int): String {
@@ -190,7 +212,7 @@ class MainActivity : AppCompatActivity() {
         subkeyVal = shiftedHalfLeft.toLong() * halfLenPower + shiftedHalfRight
 
         // Restaura zeros a esquerda e retorna
-        return subkeyVal.toString(2).padStart(halfLen * 2, '0')
+        return subkeyVal.binaryStr(halfLen * 2)
     }
 
     private fun Int.shiftLeft(shiftValue: Int, mod: Int = 28): Int {
@@ -215,7 +237,7 @@ class MainActivity : AppCompatActivity() {
         val block48bit = expansionPermutation(block)
 
         val firstXor = block48bit.toLong(2) xor subkey48Bit.toLong(2)
-        val firstXorStr = firstXor.toString(2).padStart(48, '0')
+        val firstXorStr = firstXor.binaryStr(48)
 
         val postSBoxes = substitution(firstXorStr)
 
@@ -224,7 +246,7 @@ class MainActivity : AppCompatActivity() {
 
         //second xor
         val secondXor = permutedBlock.toLong(2) xor halfLeft.toLong(2)
-        return secondXor.toString(2).padStart(32, '0')
+        return secondXor.binaryStr(32)
     }
 
     private fun permutation(oldStr: String): String {
@@ -294,7 +316,7 @@ class MainActivity : AppCompatActivity() {
             val b = block.substring(startIndex, startIndex + 6)
             val r = b.first().toString() + b.last()
             val c = b.substring(1, 5)
-            newBlock += sBoxes[startIndex / 6][r.toInt(2)][c.toInt(2)].toString(2).padStart(4, '0')
+            newBlock += sBoxes[startIndex / 6][r.toInt(2)][c.toInt(2)].binaryStr(4)
         }
 
         return newBlock
@@ -302,14 +324,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun choicePermutation(oldStr: String): String {
         val table = listOf(
-            14, 17, 11, 24, 1, 5,
-            3, 28, 15, 6, 21, 10,
-            23, 19, 12, 4, 26, 8,
-            16, 7, 27, 20, 13, 2,
-            41, 52, 31, 37, 47, 55,
-            30, 40, 51, 45, 33, 48,
-            44, 49, 39, 56, 34, 53,
-            46, 42, 50, 36, 29, 32
+            14, 17, 11, 24, 1, 5, 3, 28,
+            15, 6, 21, 10, 23, 19, 12, 4,
+            26, 8, 16, 7, 27, 20, 13, 2,
+            41, 52, 31, 37, 47, 55, 30, 40,
+            51, 45, 33, 48, 44, 49, 39, 56,
+            34, 53, 46, 42, 50, 36, 29, 32
         )
 
         return oldStr.permuteByTable(table)
