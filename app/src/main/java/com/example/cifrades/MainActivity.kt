@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.example.cifrades.databinding.ActivityMainBinding
+import com.example.cifrades.utils.CipherMode
 import com.example.cifrades.utils.Validations
 import kotlin.math.pow
 
@@ -12,22 +13,22 @@ class MainActivity : AppCompatActivity() {
     private val activityTag = "MAIN_ACTIVITY"
     private val context = this@MainActivity
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
+    private var cipherMode = CipherMode.CIFRAR
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
         binding.cipherModeChipGroup.setOnCheckedStateChangeListener { group, _ ->
-            binding.btCifrar.text = if (group.checkedChipId == R.id.decipherChip)
-                getString(R.string.decifrar)
-            else getString(R.string.cifrar)
+            cipherMode = if (group.checkedChipId == R.id.cipherChip) CipherMode.CIFRAR
+            else CipherMode.DECIFRAR
+            binding.btCifrar.text = cipherMode.toString()
         }
 
         binding.btCifrar.setOnClickListener {
             val messageToCipher = binding.tietMsgACifrar.text.toString()
             val cipherKey = binding.tietChave.text.toString()
             val isPlainText = binding.plaintextChip.isChecked
-            val decipheringMode = binding.decipherChip.isChecked
 
             val validations = Validations()
             val messageHasErrors = validations.messageHasErrors(binding.tilMsgACifrar, isPlainText)
@@ -35,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
             if (!messageHasErrors && !keyHasErrors) {
                 val binaryCipheredMessage =
-                    cipher(messageToCipher, cipherKey, isPlainText, decipheringMode)
+                    cipher(messageToCipher, cipherKey, isPlainText, cipherMode)
                 val ptCipheredMessage = binaryCipheredMessage.binToPlaintext()
                 val hexCipheredMessage = binaryCipheredMessage.binToHex()
                 binding.tvTextoCifrado.text =
@@ -51,15 +52,15 @@ class MainActivity : AppCompatActivity() {
         messageToCipher: String,
         cipherKey: String,
         isPlainText: Boolean,
-        decipheringMode: Boolean
+        cipherMode: CipherMode
     ): String {
         Log.d(activityTag, "Mensagem a cifrar: \"$messageToCipher\"")
 
         var binaryCipherKey = cipherKey.to64bit()
-        if (decipheringMode) {
-            Log.d(activityTag, "DECIFRAGEM")
+
+        Log.d(activityTag, cipherMode.toString())
+        if (cipherMode == CipherMode.DECIFRAR)
             binaryCipherKey = binaryCipherKey.reversed()
-        } else Log.d(activityTag, "CIFRAGEM")
         Log.d(activityTag, "Key: $binaryCipherKey")
 
         val blocks = if (isPlainText) messageToCipher.chunked(8) else messageToCipher.chunked(16)
