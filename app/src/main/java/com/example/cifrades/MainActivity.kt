@@ -54,23 +54,24 @@ class MainActivity : AppCompatActivity() {
         isPlainText: Boolean,
         cipherMode: CipherMode
     ): String {
-        Log.d(activityTag, "Mensagem a cifrar: \"$messageToCipher\"")
-
-        var binaryCipherKey = cipherKey.to64bit()
+        val plaintextMsg = if (isPlainText) messageToCipher else messageToCipher.hexToPlainText()
+        Log.d(activityTag, "Mensagem a cifrar: \"$plaintextMsg\"")
 
         Log.d(activityTag, cipherMode.toString())
+        var binaryCipherKey = cipherKey.plaintextToBin()
         if (cipherMode == CipherMode.DECIFRAR)
             binaryCipherKey = binaryCipherKey.reversed()
         Log.d(activityTag, "Key: $binaryCipherKey")
 
-        val blocks = if (isPlainText) messageToCipher.chunked(8) else messageToCipher.chunked(16)
+        val blocks = plaintextMsg.chunked(8)
         var binaryCipheredBlocks = ""
         for (b in blocks) {
             Log.d(activityTag, "Bloco a cifrar: \"$b\"")
 
-            val sixtyFourBitBlock = b.to64bit(isPlainText)
-            val postIP = inicialPermutation(sixtyFourBitBlock)
+            val extendedBlock = b.extendTo8Chars()
+            val binaryMsg = extendedBlock.plaintextToBin()
 
+            val postIP = inicialPermutation(binaryMsg)
             var halfLeft = postIP.substring(0, 32)
             var halfRight = postIP.substring(32)
 
@@ -92,80 +93,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         return binaryCipheredBlocks
-    }
-
-    private fun String.to64bit(isPlainText: Boolean = true): String {
-        val plainText = if (isPlainText) this else this.hexToPlainText()
-
-        val msgExtendida = plainText.extendTo64Bit()
-
-        val binaryMsg = msgExtendida.plaintextToBin()
-
-        Log.d(activityTag, "Bin: $binaryMsg")
-        return binaryMsg
-    }
-
-    /**
-     * Garante que o tamanho da string seja de no mínimo 64 bits
-     */
-    private fun String.extendTo64Bit(): String {
-        val spaceChar = ' '
-        val msgLen = this.length
-        val lenRestante = 8 - msgLen
-
-        return if (lenRestante > 0) {
-            Log.d(activityTag, "Extensão.")
-            this.padEnd(msgLen + lenRestante, spaceChar)
-        } else this
-    }
-
-    /**
-     * Converte a string para binário
-     */
-    private fun String.plaintextToBin(): String {
-
-        var binaryMsg = ""
-        this.forEach {
-            val charCode = it.code.binaryStr()
-            binaryMsg += charCode
-        }
-        return binaryMsg
-    }
-
-    private fun Int.binaryStr(nbits: Int = 8): String = this.toLong().binaryStr(nbits)
-
-    private fun Long.binaryStr(nbits: Int = 8): String {
-        val charZero = '0'
-        val radix = 2
-        return this.toString(radix).padStart(nbits, charZero)
-    }
-
-    /**
-     * Essa função transforma uma mensagem em hexadecimal e converte, caractere a caractere, para
-     * uma mensagem de texto simples
-     * */
-    private fun String.hexToPlainText(): String {
-        val nibblesPerByte = 2
-        val chars = this.chunked(nibblesPerByte)
-
-        var plainText = ""
-        chars.forEach {
-            val charCode = it.toInt(16)
-            Log.d(activityTag, "Chr: $it - \"$charCode\"")
-            plainText += charCode.toChar()
-        }
-        return plainText
-    }
-
-    /**
-     * Essa função permuta uma string a partir de uma tabela cujo indice i guarda o índice do novo
-     * valor que ocupará a posição i. A string retornada tem o tamanho da tabela.
-     * */
-    private fun String.permuteByTable(table: List<Int>): String {
-        var newBlock = ""
-        table.forEach { newBlock += this[it - 1] }
-
-        return newBlock
     }
 
     private fun inicialPermutation(blc: String): String {
@@ -213,23 +140,6 @@ class MainActivity : AppCompatActivity() {
 
         // Restaura zeros a esquerda e retorna
         return subkeyVal.binaryStr(halfLen * 2)
-    }
-
-    private fun Int.shiftLeft(shiftValue: Int, mod: Int = 28): Int {
-        val maxPower = 2.0.pow(mod).toInt()
-        var shiftX = this shl shiftValue
-        shiftX = shiftX % maxPower + shiftX / maxPower
-        return shiftX
-    }
-
-    private fun String.removeParityBits(): String {
-        return if (this.length == 64) {
-            var strWithNoParityBits = ""
-            for (i in 0..56 step 8)
-                strWithNoParityBits += this.substring(i + 1, i + 8)
-            Log.d(activityTag, "rpb: $strWithNoParityBits")
-            strWithNoParityBits
-        } else this
     }
 
     private fun roundOperations(block: String, subkey: String, halfLeft: String): String {
@@ -400,6 +310,85 @@ class MainActivity : AppCompatActivity() {
 
         return convertedString
     }
+
+    /**
+     * Essa função transforma uma mensagem em hexadecimal e converte, caractere a caractere, para
+     * uma mensagem de texto simples
+     * */
+    private fun String.hexToPlainText(): String {
+        val nibblesPerByte = 2
+        val chars = this.chunked(nibblesPerByte)
+
+        var plainText = ""
+        chars.forEach {
+            val charCode = it.toInt(16)
+            plainText += charCode.toChar()
+        }
+        return plainText
+    }
+
+    /**
+     * Converte a string para binário
+     */
+    private fun String.plaintextToBin(): String {
+        var binaryMsg = ""
+        this.forEach {
+            val charCode = it.code.binaryStr()
+            binaryMsg += charCode
+        }
+        return binaryMsg
+    }
+
+    /**
+     * Garante que o tamanho da string seja de 8, no mínimo.
+     */
+    private fun String.extendTo8Chars(): String {
+        val minLen = 8
+        val spaceChar = ' '
+        val blockLen = this.length
+        val lenRestante = minLen - blockLen
+
+        return if (lenRestante > 0) {
+            Log.d(activityTag, "Extensão.")
+            this.padEnd(blockLen + lenRestante, spaceChar)
+        } else this
+    }
+
+    /**
+     * Essa função permuta uma string a partir de uma tabela cujo indice i guarda o índice do novo
+     * valor que ocupará a posição i. A string retornada tem o tamanho da tabela.
+     * */
+    private fun String.permuteByTable(table: List<Int>): String {
+        var newBlock = ""
+        table.forEach { newBlock += this[it - 1] }
+
+        return newBlock
+    }
+
+    private fun String.removeParityBits(): String {
+        return if (this.length == 64) {
+            var strWithNoParityBits = ""
+            for (i in 0..56 step 8)
+                strWithNoParityBits += this.substring(i + 1, i + 8)
+            Log.d(activityTag, "rpb: $strWithNoParityBits")
+            strWithNoParityBits
+        } else this
+    }
+
+    private fun Int.shiftLeft(shiftValue: Int, mod: Int = 28): Int {
+        val maxPower = 2.0.pow(mod).toInt()
+        var shiftX = this shl shiftValue
+        shiftX = shiftX % maxPower + shiftX / maxPower
+        return shiftX
+    }
+
+    private fun Long.binaryStr(nbits: Int = 8): String {
+        val charZero = '0'
+        val radix = 2
+        return this.toString(radix).padStart(nbits, charZero)
+    }
+
+    private fun Int.binaryStr(nbits: Int = 8): String = this.toLong().binaryStr(nbits)
 
     private fun String.toast() {
         Toast.makeText(context, this, Toast.LENGTH_SHORT).show()
