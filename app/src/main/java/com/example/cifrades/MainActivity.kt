@@ -54,38 +54,47 @@ class MainActivity : AppCompatActivity() {
         isPlainText: Boolean,
         cipherMode: CipherMode
     ): String {
-        val plaintextMsg = if (isPlainText) messageToCipher else messageToCipher.hexToPlainText()
-        Log.d(activityTag, "Mensagem a cifrar: \"$plaintextMsg\"")
-
         Log.d(activityTag, cipherMode.toString())
-        var binaryCipherKey = cipherKey.plaintextToBin()
-        if (cipherMode == CipherMode.DECIFRAR)
-            binaryCipherKey = binaryCipherKey.reversed()
-        Log.d(activityTag, "Key: $binaryCipherKey")
 
-        val blocks = plaintextMsg.chunked(8)
+        val plaintextMsg = if (isPlainText) messageToCipher else messageToCipher.hexToPlainText()
+        val blocks = plaintextMsg.chunkIn8CharBlocks()
+        Log.d(activityTag, "Blocos a cifrar: $blocks")
+        
+        val binaryCipherKey = cipherKey.plaintextToBin()
+        Log.d(activityTag, "Chave em binário: $binaryCipherKey")
+
+        val parityBitsStripped = binaryCipherKey.removeParityBits()
+        var lastShiftedKey = parityBitsStripped
+
         var binaryCipheredBlocks = ""
         for (b in blocks) {
             Log.d(activityTag, "Bloco a cifrar: \"$b\"")
 
-            val extendedBlock = b.extendTo8Chars()
-            val binaryMsg = extendedBlock.plaintextToBin()
+            val binaryBlock = b.plaintextToBin()
 
-            val postIP = inicialPermutation(binaryMsg)
-            var halfLeft = postIP.substring(0, 32)
-            var halfRight = postIP.substring(32)
+            val postIP = initialPermutation(binaryBlock)
+            val (firstHalfLeft, firstHalfRight) = postIP.halves(cipherMode)
 
-            var subkey = binaryCipherKey
-            var oldHalfRight: String
+            val halfRights = mutableListOf(firstHalfRight)
+            val halfLefts = mutableListOf(firstHalfLeft)
+
             for (i in 0..15) {
-                subkey = getRoundSubkey(subkey, i)
+                val oldHalfRight = halfRights[i]
+                val oldHalfLeftLong = halfLefts[i].toLong(2)
 
-                oldHalfRight = halfRight
-                halfRight = roundOperations(halfRight, subkey, halfLeft)
-                halfLeft = oldHalfRight
+                lastShiftedKey = shiftKey(lastShiftedKey, i)
+
+                val fOutput = f(oldHalfRight, lastShiftedKey).toLong(2)
+
+
+                val finalRoundOp = oldHalfLeftLong xor fOutput
+
+                halfRights.add(finalRoundOp.binaryStr(32))
+                halfLefts.add(oldHalfRight)
             }
 
-            val postRounds = halfLeft + halfRight
+            val postRounds = halfLefts.last() + halfRights.last()
+            Log.d(activityTag, "postRounds: $postRounds")
 
             val binaryCipheredBlock = finalPermutation(postRounds)
 
@@ -95,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         return binaryCipheredBlocks
     }
 
-    private fun inicialPermutation(blc: String): String {
+    private fun initialPermutation(blc: String): String {
         val tableIP = listOf(
             58, 50, 42, 34, 26, 18, 10, 2,
             60, 52, 44, 36, 28, 20, 12, 4,
@@ -112,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         return posIP
     }
 
-    private fun getRoundSubkey(lastSubkey: String, roundNumber: Int): String {
+    private fun shiftKey(lastShiftedKey: String, roundNumber: Int): String {
         val shiftTable = listOf(
             1, 1, 2, 2,
             2, 2, 2, 2,
@@ -120,11 +129,10 @@ class MainActivity : AppCompatActivity() {
             2, 2, 2, 1
         )
 
-        val baseSubkey = lastSubkey.removeParityBits()
-        val halfLen = baseSubkey.length / 2
+        val halfLen = lastShiftedKey.length / 2
         val halfLenPower = 2.0.pow(halfLen).toInt()
 
-        var subkeyVal = baseSubkey.toLong(2)
+        var subkeyVal = lastShiftedKey.toLong(2)
 
         //Separa a chave em duas metades
         val halfLeft = (subkeyVal / halfLenPower).toInt()
@@ -142,7 +150,7 @@ class MainActivity : AppCompatActivity() {
         return subkeyVal.binaryStr(halfLen * 2)
     }
 
-    private fun roundOperations(block: String, subkey: String, halfLeft: String): String {
+    private fun f(block: String, subkey: String): String {
         val subkey48Bit = choicePermutation(subkey)
         val block48bit = expansionPermutation(block)
 
@@ -152,11 +160,7 @@ class MainActivity : AppCompatActivity() {
         val postSBoxes = substitution(firstXorStr)
 
         //permutation
-        val permutedBlock = permutation(postSBoxes)
-
-        //second xor
-        val secondXor = permutedBlock.toLong(2) xor halfLeft.toLong(2)
-        return secondXor.binaryStr(32)
+        return permutation(postSBoxes)
     }
 
     private fun permutation(oldStr: String): String {
@@ -328,7 +332,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Converte a string para binário
+     * Converte a string em texto simples para uma string de texto binário
      */
     private fun String.plaintextToBin(): String {
         var binaryMsg = ""
@@ -340,18 +344,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Garante que o tamanho da string seja de 8, no mínimo.
+     * Aumenta o tamanho da string para que seja um múltiplo de 8, divide-a em blocos de 8
+     * caracteres e então a retorna.
      */
-    private fun String.extendTo8Chars(): String {
-        val minLen = 8
+    private fun String.chunkIn8CharBlocks(): List<String> {
+        val blockLen = 8
         val spaceChar = ' '
-        val blockLen = this.length
-        val lenRestante = minLen - blockLen
+        val strLen = this.length
+        val lenRestante = blockLen - strLen % blockLen
 
-        return if (lenRestante > 0) {
+        var extendedStr = ""
+        if (lenRestante > 0) {
             Log.d(activityTag, "Extensão.")
-            this.padEnd(blockLen + lenRestante, spaceChar)
-        } else this
+            extendedStr = this.padEnd(strLen + lenRestante, spaceChar)
+        }
+
+        return extendedStr.chunked(blockLen)
     }
 
     /**
@@ -389,6 +397,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun Int.binaryStr(nbits: Int = 8): String = this.toLong().binaryStr(nbits)
+
+    private fun String.halves(cipherMode: CipherMode): List<String> {
+        val len = this.length
+        val firstHalf = this.substring(0, len/2)
+        val secondHalf = this.substring(len/2, len)
+        return if (cipherMode == CipherMode.CIFRAR)
+            listOf(firstHalf, secondHalf)
+        else listOf(secondHalf, firstHalf)
+
+    }
 
     private fun String.toast() {
         Toast.makeText(context, this, Toast.LENGTH_SHORT).show()
