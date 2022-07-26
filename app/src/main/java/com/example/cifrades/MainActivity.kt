@@ -82,10 +82,9 @@ class MainActivity : AppCompatActivity() {
                 val oldHalfRight = halfRights[i]
                 val oldHalfLeftLong = halfLefts[i].toLong(2)
 
-                lastShiftedKey = shiftKey(lastShiftedKey, i)
+                lastShiftedKey = shiftKey(lastShiftedKey, i, cipherMode)
 
                 val fOutput = f(oldHalfRight, lastShiftedKey).toLong(2)
-
 
                 val finalRoundOp = oldHalfLeftLong xor fOutput
 
@@ -121,13 +120,15 @@ class MainActivity : AppCompatActivity() {
         return posIP
     }
 
-    private fun shiftKey(lastShiftedKey: String, roundNumber: Int): String {
-        val shiftTable = listOf(
+    private fun shiftKey(lastShiftedKey: String, roundNumber: Int, cipherMode: CipherMode): String {
+        val cipherShiftTable = listOf(
             1, 1, 2, 2,
             2, 2, 2, 2,
             1, 2, 2, 2,
             2, 2, 2, 1
         )
+        val decipherShiftTable = cipherShiftTable.toMutableList()
+        decipherShiftTable[0] = 0
 
         val halfLen = lastShiftedKey.length / 2
         val halfLenPower = 2.0.pow(halfLen).toInt()
@@ -139,9 +140,18 @@ class MainActivity : AppCompatActivity() {
         val halfRight = (subkeyVal % halfLenPower).toInt()
 
         //Desloca as duas metades
-        val shiftValue = shiftTable[roundNumber]
-        val shiftedHalfLeft = halfLeft.shiftLeft(shiftValue, halfLen)
-        val shiftedHalfRight = halfRight.shiftLeft(shiftValue, halfLen)
+        val shiftValue: Int
+        val shiftedHalfLeft: Int
+        val shiftedHalfRight: Int
+        if (cipherMode == CipherMode.CIFRAR) {
+            shiftValue = cipherShiftTable[roundNumber]
+            shiftedHalfLeft = halfLeft.shiftLeft(shiftValue, halfLen)
+            shiftedHalfRight = halfRight.shiftLeft(shiftValue, halfLen)
+        } else {
+            shiftValue = decipherShiftTable[roundNumber]
+            shiftedHalfLeft = halfLeft.shiftRight(shiftValue, halfLen)
+            shiftedHalfRight = halfRight.shiftRight(shiftValue, halfLen)
+        }
 
         // Reúne as duas metades
         subkeyVal = shiftedHalfLeft.toLong() * halfLenPower + shiftedHalfRight
@@ -351,12 +361,12 @@ class MainActivity : AppCompatActivity() {
         val blockLen = 8
         val spaceChar = ' '
         val strLen = this.length
-        val lenRestante = blockLen - strLen % blockLen
+        val remainder = strLen % blockLen
 
-        var extendedStr = ""
-        if (lenRestante > 0) {
+        var extendedStr = this
+        if (remainder > 0) {
             Log.d(activityTag, "Extensão.")
-            extendedStr = this.padEnd(strLen + lenRestante, spaceChar)
+            extendedStr = extendedStr.padEnd(strLen - remainder + blockLen, spaceChar)
         }
 
         return extendedStr.chunked(blockLen)
@@ -386,6 +396,13 @@ class MainActivity : AppCompatActivity() {
     private fun Int.shiftLeft(shiftValue: Int, mod: Int = 28): Int {
         val maxPower = 2.0.pow(mod).toInt()
         var shiftX = this shl shiftValue
+        shiftX = shiftX % maxPower + shiftX / maxPower
+        return shiftX
+    }
+
+    private fun Int.shiftRight(shiftValue: Int, mod: Int = 28): Int {
+        val maxPower = 2.0.pow(mod).toInt()
+        var shiftX = this shr shiftValue
         shiftX = shiftX % maxPower + shiftX / maxPower
         return shiftX
     }
