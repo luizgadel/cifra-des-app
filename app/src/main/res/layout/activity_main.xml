@@ -125,24 +125,48 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tilChave" />
 
-    <TextView
-        android:id="@+id/tvTextoCifradoHexa"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clTextoCifradoHexa"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="@string/texto_cifrado_em_hexadecimal_placeholder"
         app:layout_constraintEnd_toEndOf="@+id/tvTextoCifrado"
         app:layout_constraintStart_toStartOf="@+id/tvTextoCifrado"
-        app:layout_constraintTop_toBottomOf="@+id/tvTextoCifrado" />
+        app:layout_constraintTop_toBottomOf="@id/tvTextoCifrado">
+
+        <TextView
+            android:id="@+id/tvTextoCifradoHexa"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="@string/texto_cifrado_em_hexadecimal_placeholder"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/copyView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/copyView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@+id/tvTextoCifradoHexa"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvTextoCifradoHexa"
+            app:srcCompat="@drawable/ic_baseline_content_copy_24"
+            android:contentDescription="@string/content_description_copy_clipboard" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
         android:id="@+id/btCifrar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:text="@string/cifrar"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/tilMsgACifrar"
-        app:layout_constraintStart_toStartOf="@+id/tilMsgACifrar" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

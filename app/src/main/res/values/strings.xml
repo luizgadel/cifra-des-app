@@ -12,4 +12,5 @@
     <string name="cifrar">Cifrar</string>
     <string name="escolha_o_modo_de_cifragem">Escolha o modo de cifragem</string>
     <string name="decifrar">Decifrar</string>
+    <string name="content_description_copy_clipboard">Ícone de copiar. Simboliza que há um evento disparado ao clicar sobre a mensagem. O evento em questão copia a mensagem cifrada em hexadecimal para a área de trasnferência.</string>
 </resources>

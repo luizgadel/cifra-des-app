@@ -1,5 +1,8 @@
 package com.example.cifrades
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +17,8 @@ class MainActivity : AppCompatActivity() {
     private val context = this@MainActivity
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private var cipherMode = CipherMode.CIFRAR
+    private var ptCipheredMessage = ""
+    private var hexCipheredMessage = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,13 +42,25 @@ class MainActivity : AppCompatActivity() {
             if (!messageHasErrors && !keyHasErrors) {
                 val binaryCipheredMessage =
                     cipher(messageToCipher, cipherKey, isPlainText, cipherMode)
-                val ptCipheredMessage = binaryCipheredMessage.binToPlaintext()
-                val hexCipheredMessage = binaryCipheredMessage.binToHex()
+                ptCipheredMessage = binaryCipheredMessage.binToPlaintext()
+                hexCipheredMessage = binaryCipheredMessage.binToHex()
                 binding.tvTextoCifrado.text =
                     getString(R.string.texto_cifrado_placeholder, ptCipheredMessage)
                 binding.tvTextoCifradoHexa.text =
                     getString(R.string.texto_cifrado_em_hexadecimal_placeholder, hexCipheredMessage)
             }
+        }
+
+        binding.clTextoCifradoHexa.setOnClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip: ClipData =
+                ClipData.newPlainText("Texto cifrado em hexadecimal", hexCipheredMessage)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(
+                context,
+                "Texto copiado para a área de transferência!",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
     }
@@ -59,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         val plaintextMsg = if (isPlainText) messageToCipher else messageToCipher.hexToPlainText()
         val blocks = plaintextMsg.chunkIn8CharBlocks()
         Log.d(activityTag, "Blocos a cifrar: $blocks")
-        
+
         val binaryCipherKey = cipherKey.plaintextToBin()
         Log.d(activityTag, "Chave em binário: $binaryCipherKey")
 
@@ -427,8 +444,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun String.halves(cipherMode: CipherMode): List<String> {
         val len = this.length
-        val firstHalf = this.substring(0, len/2)
-        val secondHalf = this.substring(len/2, len)
+        val firstHalf = this.substring(0, len / 2)
+        val secondHalf = this.substring(len / 2, len)
         return if (cipherMode == CipherMode.CIFRAR)
             listOf(firstHalf, secondHalf)
         else listOf(secondHalf, firstHalf)
