@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity() {
             Log.d(activityTag, "Bloco a cifrar: \"$b\"")
 
             val binaryBlock = b.plaintextToBin()
+            Log.d(activityTag, "Bloco a cifrar (bin): \"$binaryBlock\"")
 
             val postIP = initialPermutation(binaryBlock)
             val (firstHalfLeft, firstHalfRight) = postIP.halves(cipherMode)
@@ -92,12 +93,17 @@ class MainActivity : AppCompatActivity() {
                 halfLefts.add(oldHalfRight)
             }
 
-            val postRounds = halfLefts.last() + halfRights.last()
+            val postRounds = if (cipherMode == CipherMode.CIFRAR)
+                halfLefts.last() + halfRights.last()
+            else halfRights.last() + halfLefts.last()
             Log.d(activityTag, "postRounds: $postRounds")
 
             val binaryCipheredBlock = finalPermutation(postRounds)
 
             binaryCipheredBlocks += binaryCipheredBlock
+
+            //reset to original key so in decription the subkeys will work properly for greater msgs
+            lastShiftedKey = parityBitsStripped
         }
 
         return binaryCipheredBlocks
@@ -396,14 +402,18 @@ class MainActivity : AppCompatActivity() {
     private fun Int.shiftLeft(shiftValue: Int, mod: Int = 28): Int {
         val maxPower = 2.0.pow(mod).toInt()
         var shiftX = this shl shiftValue
-        shiftX = shiftX % maxPower + shiftX / maxPower
+        val overflow = shiftX / maxPower
+        shiftX = shiftX % maxPower + overflow
         return shiftX
     }
 
     private fun Int.shiftRight(shiftValue: Int, mod: Int = 28): Int {
         val maxPower = 2.0.pow(mod).toInt()
+        val undercut = 2.0.pow(shiftValue).toInt()
+        val underflow = this % undercut
         var shiftX = this shr shiftValue
-        shiftX = shiftX % maxPower + shiftX / maxPower
+        shiftX = shiftX % maxPower + underflow * (maxPower / undercut)
+
         return shiftX
     }
 
