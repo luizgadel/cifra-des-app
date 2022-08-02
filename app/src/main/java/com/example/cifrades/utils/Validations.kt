@@ -12,14 +12,14 @@ class Validations {
     private val errorMsgMustHaveOnlyAsciiChars =
         "A mensagem deve conter apenas caracteres ISO 8859-1 (ASCII extendida)."
 
-    fun messageHasErrors(textInput: TextInputLayout, isPlainText: Boolean): Boolean {
+    fun messageHasErrors(textInput: TextInputLayout, formatoEntrada: FormatoEntrada): Boolean {
         var hasErrors = false
         val message = textInput.editText?.text
 
         if (message.isNullOrBlank()) {
             textInput.error = errorEmptyMessage
             hasErrors = true
-        } else if (isPlainText) {
+        } else if (formatoEntrada == FormatoEntrada.TEXTO_SIMPLES) {
             val asciiEncoder = Charsets.ISO_8859_1.newEncoder()
             if (!asciiEncoder.canEncode(message)) {
                 textInput.error = errorMsgMustHaveOnlyAsciiChars

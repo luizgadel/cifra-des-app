@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.example.cifrades.databinding.ActivityMainBinding
+import com.example.cifrades.utils.FormatoEntrada
 import com.example.cifrades.utils.ModoCifra
 import com.example.cifrades.utils.Validations
 import kotlin.math.pow
@@ -33,15 +34,18 @@ class MainActivity : AppCompatActivity() {
         binding.btCifrar.setOnClickListener {
             val messageToCipher = binding.tietMsgACifrar.text.toString()
             val cipherKey = binding.tietChave.text.toString()
-            val isPlainText = binding.plaintextChip.isChecked
+            val formatoEntrada =
+                if (binding.plaintextChip.isChecked)
+                    FormatoEntrada.TEXTO_SIMPLES else FormatoEntrada.HEXADECIMAL
 
             val validations = Validations()
-            val messageHasErrors = validations.messageHasErrors(binding.tilMsgACifrar, isPlainText)
+            val messageHasErrors =
+                validations.messageHasErrors(binding.tilMsgACifrar, formatoEntrada)
             val keyHasErrors = validations.keyHasErrors(binding.tilChave)
 
             if (!messageHasErrors && !keyHasErrors) {
                 val binaryCipheredMessage =
-                    cifra(messageToCipher, cipherKey, isPlainText, cipherMode)
+                    cifra(messageToCipher, cipherKey, formatoEntrada, cipherMode)
                 ptCipheredMessage = binaryCipheredMessage.binPraTextoSimples()
                 hexCipheredMessage = binaryCipheredMessage.binToHex()
                 binding.tvTextoCifrado.text =
@@ -68,13 +72,15 @@ class MainActivity : AppCompatActivity() {
     private fun cifra(
         mensagemACifrar: String,
         chaveCifra: String,
-        ehTextoSimples: Boolean,
+        formatoEntrada: FormatoEntrada,
         modoCifra: ModoCifra
     ): String {
         Log.d(activityTag, modoCifra.toString())
 
-        val msgTextoSimples =
-            if (ehTextoSimples) mensagemACifrar else mensagemACifrar.hexaPraTextoSimples()
+        val msgTextoSimples = if (formatoEntrada == FormatoEntrada.TEXTO_SIMPLES)
+            mensagemACifrar
+        else mensagemACifrar.hexaPraTextoSimples()
+
         val blocos = msgTextoSimples.divideEmBlocos8Caracteres()
         Log.d(activityTag, "Blocos a cifrar: $blocos")
 
