@@ -137,8 +137,7 @@ class MainActivity : AppCompatActivity() {
             63, 55, 47, 39, 31, 23, 15, 7
         )
 
-        val posPI = blc.permutaPelaTabela(tabelaPI)
-        return posPI
+        return blc.permutaPelaTabela(tabelaPI)
     }
 
     private fun deslocaChave(
@@ -304,8 +303,7 @@ class MainActivity : AppCompatActivity() {
             33, 1, 41, 9, 49, 17, 57, 25
         )
 
-        val posPF = blc.permutaPelaTabela(tabelaPF)
-        return posPF
+        return blc.permutaPelaTabela(tabelaPF)
     }
 
     /**
