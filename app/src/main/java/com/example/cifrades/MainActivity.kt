@@ -82,20 +82,15 @@ class MainActivity : AppCompatActivity() {
         else mensagemACifrar.hexaPraTextoSimples()
 
         val blocos = msgTextoSimples.divideEmBlocos8Caracteres()
-        Log.d(activityTag, "Blocos a cifrar: $blocos")
 
         val chaveCifraBinaria = chaveCifra.textoSimplesPraBinario()
-        Log.d(activityTag, "Chave em binário: $chaveCifraBinaria")
 
         val bitsParidadeRetirados = chaveCifraBinaria.removeBitsParidade()
         var ultimaChaveDeslocada = bitsParidadeRetirados
 
         var blocosBinariosCifrados = ""
         for (b in blocos) {
-            Log.d(activityTag, "Bloco a cifrar: \"$b\"")
-
             val blocoBinario = b.textoSimplesPraBinario()
-            Log.d(activityTag, "Bloco a cifrar (bin): \"$blocoBinario\"")
 
             val posPI = permutacaoInicial(blocoBinario)
             val (primMetadeEsquerda, primMetadeDireita) = posPI.metades(modoCifra)
