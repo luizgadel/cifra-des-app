@@ -1,6 +1,6 @@
 package com.example.cifrades.utils
 
-enum class CipherMode {
+enum class ModoCifra {
     CIFRAR,
     DECIFRAR,
 }
