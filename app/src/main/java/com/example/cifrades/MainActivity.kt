@@ -75,8 +75,6 @@ class MainActivity : AppCompatActivity() {
         formatoEntrada: FormatoEntrada,
         modoCifra: ModoCifra
     ): String {
-        Log.d(activityTag, modoCifra.toString())
-
         val msgTextoSimples = if (formatoEntrada == FormatoEntrada.TEXTO_SIMPLES)
             mensagemACifrar
         else mensagemACifrar.hexaPraTextoSimples()
@@ -115,7 +113,6 @@ class MainActivity : AppCompatActivity() {
             val posRodadas = if (modoCifra == ModoCifra.CIFRAR)
                 metadesEsquerdas.last() + metadesDireitas.last()
             else metadesDireitas.last() + metadesEsquerdas.last()
-            Log.d(activityTag, "pós rodadas: $posRodadas")
 
             val blocoBinarioCifrado = permutacaoFinal(posRodadas)
 
@@ -141,7 +138,6 @@ class MainActivity : AppCompatActivity() {
         )
 
         val posPI = blc.permutaPelaTabela(tabelaPI)
-        Log.d(activityTag, "PI: $posPI")
         return posPI
     }
 
@@ -309,7 +305,6 @@ class MainActivity : AppCompatActivity() {
         )
 
         val posPF = blc.permutaPelaTabela(tabelaPF)
-        Log.d(activityTag, "PF: $posPF")
         return posPF
     }
 
@@ -388,10 +383,8 @@ class MainActivity : AppCompatActivity() {
         val resto = tamStr % tamBloco
 
         var stringExtendida = this
-        if (resto > 0) {
-            Log.d(activityTag, "Extensão.")
+        if (resto > 0)
             stringExtendida = stringExtendida.padEnd(tamStr - resto + tamBloco, caractereEspaco)
-        }
 
         return stringExtendida.chunked(tamBloco)
     }
@@ -412,7 +405,6 @@ class MainActivity : AppCompatActivity() {
             var strSemBitsParidade = ""
             for (i in 0..56 step 8)
                 strSemBitsParidade += this.substring(i + 1, i + 8)
-            Log.d(activityTag, "rpb: $strSemBitsParidade")
             strSemBitsParidade
         } else this
     }
