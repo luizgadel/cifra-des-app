@@ -99,14 +99,14 @@ class MainActivity : AppCompatActivity() {
             for (i in 0..15) {
                 ultimaChaveDeslocada = deslocaChave(ultimaChaveDeslocada, i, modoCifra)
 
-                val antigaMetadeDireita = metadesDireitas[i]
-                val saidaDeF = f(antigaMetadeDireita, ultimaChaveDeslocada).toLong(2)
+                val metadeDireita = metadesDireitas[i]
+                val saidaDeF = f(metadeDireita, ultimaChaveDeslocada).toLong(2)
 
-                val antigaMetadeEsquerdaLong = metadesEsquerdas[i].toLong(2)
-                val ultimaOpRodada = antigaMetadeEsquerdaLong xor saidaDeF
+                val metadeEsquerdaLong = metadesEsquerdas[i].toLong(2)
+                val ultimaOpRodada = metadeEsquerdaLong xor saidaDeF
 
                 metadesDireitas.add(ultimaOpRodada.stringBinaria(32))
-                metadesEsquerdas.add(antigaMetadeDireita)
+                metadesEsquerdas.add(metadeDireita)
             }
 
             val posRodadas = if (modoCifra == ModoCifra.CIFRAR)
