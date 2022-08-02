@@ -84,8 +84,8 @@ class MainActivity : AppCompatActivity() {
         val chaveCifraBinaria = chaveCifra.textoSimplesPraBinario()
 
         val bitsParidadeRetirados = chaveCifraBinaria.removeBitsParidade()
-
         var ultimaChaveDeslocada = bitsParidadeRetirados
+
         var blocosBinariosCifrados = ""
         for (b in blocos) {
             val blocoBinario = b.textoSimplesPraBinario()
