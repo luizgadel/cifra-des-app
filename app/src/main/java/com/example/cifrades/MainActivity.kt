@@ -75,9 +75,9 @@ class MainActivity : AppCompatActivity() {
         formatoEntrada: FormatoEntrada,
         modoCifra: ModoCifra
     ): String {
-        val msgTextoSimples = if (formatoEntrada == FormatoEntrada.TEXTO_SIMPLES)
-            mensagemACifrar
-        else mensagemACifrar.hexaPraTextoSimples()
+        val msgTextoSimples = if (formatoEntrada == FormatoEntrada.HEXADECIMAL)
+            mensagemACifrar.hexaPraTextoSimples()
+        else mensagemACifrar
 
         val blocos = msgTextoSimples.divideEmBlocos8Caracteres()
 
