@@ -97,13 +97,12 @@ class MainActivity : AppCompatActivity() {
             val metadesEsquerdas = mutableListOf(primMetadeEsquerda)
 
             for (i in 0..15) {
-                val antigaMetadeDireita = metadesDireitas[i]
-                val antigaMetadeEsquerdaLong = metadesEsquerdas[i].toLong(2)
-
                 ultimaChaveDeslocada = deslocaChave(ultimaChaveDeslocada, i, modoCifra)
 
+                val antigaMetadeDireita = metadesDireitas[i]
                 val saidaDeF = f(antigaMetadeDireita, ultimaChaveDeslocada).toLong(2)
 
+                val antigaMetadeEsquerdaLong = metadesEsquerdas[i].toLong(2)
                 val ultimaOpRodada = antigaMetadeEsquerdaLong xor saidaDeF
 
                 metadesDireitas.add(ultimaOpRodada.stringBinaria(32))
